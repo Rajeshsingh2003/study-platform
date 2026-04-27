@@ -12,37 +12,46 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install backend deps
+        id: backend-install
         run: cd backend && npm install
+        continue-on-error: true
 
       - name: Install frontend deps
+        id: frontend-install
         run: cd frontend && npm install
+        continue-on-error: true
 
       - name: Build frontend
+        id: frontend-build
         run: cd frontend && npm run build
+        continue-on-error: true
 
       - name: Build Docker images
-        run: docker compose build
-        continue-on-error: true  # don't stop — let AI analyze even on fail
+        id: docker-build
+        run: docker compose build 2>&1 | tee /tmp/build_logs.txt
+        continue-on-error: true
 
-      - name: Collect logs
-        if: always()             # runs even if previous step failed
+      - name: Collect job results
+        if: always()
         run: |
-          echo "BUILD_STATUS=${{ job.status }}" >> $GITHUB_ENV
-          docker compose build 2>&1 | tail -100 > /tmp/build_logs.txt || true
+          echo "BACKEND_STATUS=${{ steps.backend-install.outcome }}" >> /tmp/job_summary.txt
+          echo "FRONTEND_STATUS=${{ steps.frontend-install.outcome }}" >> /tmp/job_summary.txt
+          echo "BUILD_STATUS=${{ steps.frontend-build.outcome }}" >> /tmp/job_summary.txt
+          echo "DOCKER_STATUS=${{ steps.docker-build.outcome }}" >> /tmp/job_summary.txt
+          cat /tmp/job_summary.txt
 
       - name: AI log analysis
         if: always()
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node .github/scripts/analyze-logs.js
 
       - name: Post AI comment on PR
@@ -57,6 +66,22 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                body
+              });
+            }
+
+      - name: Post AI comment on Push (commit)
+        if: always() && github.event_name == 'push'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('/tmp/ai_comment.txt')) {
+              const body = fs.readFileSync('/tmp/ai_comment.txt', 'utf8');
+              github.rest.repos.createCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
                 body
               });
             }

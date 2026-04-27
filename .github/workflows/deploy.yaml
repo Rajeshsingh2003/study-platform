@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-# Fix 1: Give workflow permission to post comments
 permissions:
   contents: write
   pull-requests: write
@@ -22,27 +21,46 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
+
+      # -------------------------------
+      # INSTALL DEPENDENCIES
+      # -------------------------------
 
       - name: Install backend deps
         id: backend-install
-        run: cd backend && npm install
-        continue-on-error: true
+        run: |
+          cd backend
+          npm install
 
       - name: Install frontend deps
         id: frontend-install
-        run: cd frontend && npm install
-        continue-on-error: true
+        run: |
+          cd frontend
+          npm install
+
+      # -------------------------------
+      # BUILD FRONTEND (capture logs)
+      # -------------------------------
 
       - name: Build frontend
         id: frontend-build
-        run: cd frontend && npm run build
-        continue-on-error: true
+        run: |
+          cd frontend
+          npm run build 2>&1 | tee /tmp/frontend_build_logs.txt
+
+      # -------------------------------
+      # DOCKER BUILD (capture logs)
+      # -------------------------------
 
       - name: Build Docker images
         id: docker-build
-        run: docker compose build 2>&1 | tee /tmp/build_logs.txt
-        continue-on-error: true
+        run: |
+          docker compose build 2>&1 | tee /tmp/build_logs.txt
+
+      # -------------------------------
+      # COLLECT JOB RESULTS (REAL STATUS)
+      # -------------------------------
 
       - name: Collect job results
         if: always()
@@ -51,13 +69,31 @@ jobs:
           echo "FRONTEND_INSTALL=${{ steps.frontend-install.outcome }}" >> /tmp/job_summary.txt
           echo "FRONTEND_BUILD=${{ steps.frontend-build.outcome }}" >> /tmp/job_summary.txt
           echo "DOCKER_BUILD=${{ steps.docker-build.outcome }}" >> /tmp/job_summary.txt
+
+          echo "" >> /tmp/job_summary.txt
+          echo "==== FRONTEND BUILD LOGS ====" >> /tmp/job_summary.txt
+          tail -n 100 /tmp/frontend_build_logs.txt >> /tmp/job_summary.txt
+
+          echo "" >> /tmp/job_summary.txt
+          echo "==== DOCKER BUILD LOGS ====" >> /tmp/job_summary.txt
+          tail -n 100 /tmp/build_logs.txt >> /tmp/job_summary.txt
+
           cat /tmp/job_summary.txt
+
+      # -------------------------------
+      # AI LOG ANALYSIS (SAFE)
+      # -------------------------------
 
       - name: AI log analysis
         if: always()
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node .github/scripts/analyze-logs.js
+        run: |
+          node .github/scripts/analyze-logs.js || echo "AI analysis failed, continuing..."
+
+      # -------------------------------
+      # COMMENT ON PR
+      # -------------------------------
 
       - name: Post AI comment on PR
         if: always() && github.event_name == 'pull_request'
@@ -75,6 +111,10 @@ jobs:
               });
               console.log('Comment posted on PR successfully!');
             }
+
+      # -------------------------------
+      # COMMENT ON PUSH
+      # -------------------------------
 
       - name: Post AI comment on Push
         if: always() && github.event_name == 'push'

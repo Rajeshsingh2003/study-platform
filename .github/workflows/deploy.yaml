@@ -1,0 +1,62 @@
+name: StudyVault CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install backend deps
+        run: cd backend && npm install
+
+      - name: Install frontend deps
+        run: cd frontend && npm install
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Build Docker images
+        run: docker compose build
+        continue-on-error: true  # don't stop — let AI analyze even on fail
+
+      - name: Collect logs
+        if: always()             # runs even if previous step failed
+        run: |
+          echo "BUILD_STATUS=${{ job.status }}" >> $GITHUB_ENV
+          docker compose build 2>&1 | tail -100 > /tmp/build_logs.txt || true
+
+      - name: AI log analysis
+        if: always()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/analyze-logs.js
+
+      - name: Post AI comment on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('/tmp/ai_comment.txt')) {
+              const body = fs.readFileSync('/tmp/ai_comment.txt', 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+            }

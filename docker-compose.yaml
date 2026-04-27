@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studyvault-backend
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      MONGO_URI: "mongodb+srv://admin:admin%40123@study-cluster.jm8x0vc.mongodb.net/study-platform?retryWrites=true&w=majority"
+      JWT_SECRET: bbdb59d6b4bd4ac9a9ebfce75fb59e0e73f6cbaac1b9c9c8cdea3b6230033f38
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "5000:5000"
+    networks:
+      - studyvault-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ""
+    container_name: studyvault-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - studyvault-net
+
+volumes:
+  uploads_data:
+
+networks:
+  studyvault-net:
+    driver: bridge

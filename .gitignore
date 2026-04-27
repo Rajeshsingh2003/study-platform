@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files — NEVER push these!
+.env
+backend/.env
+frontend/.env
+
+# React production build
+frontend/build/
+
+# Uploaded files
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Docker
+.docker/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

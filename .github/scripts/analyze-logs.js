@@ -29,7 +29,7 @@ try {
 }
 
 console.log("Job Summary:\n", jobSummary);
-console.log("Build Logs (last 500 chars):\n", buildLogs.slice(-500));
+console.log("Build Logs (last 300 chars):\n", buildLogs.slice(-300));
 
 const prompt = `You are an expert DevOps assistant reviewing CI/CD pipeline logs for a college project called StudyVault. It is a Node.js + Express backend, React frontend, and Docker-based deployment.
 
@@ -59,9 +59,10 @@ const requestBody = JSON.stringify({
   contents: [{ parts: [{ text: prompt }] }]
 });
 
+// Fix 2: Use correct Gemini model — gemini-2.0-flash
 const options = {
   hostname: "generativelanguage.googleapis.com",
-  path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+  path: `/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -69,7 +70,7 @@ const options = {
   }
 };
 
-console.log("\nSending logs to Gemini AI...");
+console.log("\nSending logs to Gemini AI (gemini-2.0-flash)...");
 
 const req = https.request(options, (res) => {
   let data = "";
@@ -83,35 +84,33 @@ const req = https.request(options, (res) => {
     try {
       const parsed = JSON.parse(data);
 
-      // Handle API-level errors
       if (parsed.error) {
         console.error("Gemini API error:", parsed.error.message);
         fs.writeFileSync("/tmp/ai_comment.txt",
-          `## AI Build Analysis\n\nGemini API error: ${parsed.error.message}\n\nCheck your GEMINI_API_KEY secret is valid.`
+          `## AI Build Analysis\n\nGemini API error: ${parsed.error.message}\n\nCheck your GEMINI_API_KEY secret.`
         );
         process.exit(0);
       }
 
-      // Safely extract text with full defensive checks
       const candidates = parsed.candidates;
       if (!candidates || candidates.length === 0) {
-        console.log("No candidates in response. Full response:", data);
+        console.log("No candidates returned. Full response:", data);
         fs.writeFileSync("/tmp/ai_comment.txt",
-          `## AI Build Analysis\n\nNo response from Gemini. Raw: ${data.slice(0, 200)}`
+          `## AI Build Analysis\n\nNo response from Gemini.\n\nRaw: ${data.slice(0, 300)}`
         );
         process.exit(0);
       }
 
-      const content = candidates[0].content;
-      if (!content || !content.parts || content.parts.length === 0) {
-        console.log("No content parts in response.");
+      const parts = candidates[0]?.content?.parts;
+      if (!parts || parts.length === 0) {
+        console.log("No parts in response.");
         fs.writeFileSync("/tmp/ai_comment.txt",
           `## AI Build Analysis\n\nEmpty response from Gemini.`
         );
         process.exit(0);
       }
 
-      const analysis = content.parts[0].text;
+      const analysis = parts[0].text;
 
       const comment = [
         "## AI Build Analysis",
@@ -132,9 +131,8 @@ const req = https.request(options, (res) => {
     } catch (err) {
       console.error("JSON parse error:", err.message);
       console.error("Full raw response:", data);
-
       fs.writeFileSync("/tmp/ai_comment.txt",
-        `## AI Build Analysis\n\nCould not parse Gemini response.\n\nRaw output:\n\`\`\`\n${data.slice(0, 500)}\n\`\`\``
+        `## AI Build Analysis\n\nCould not parse Gemini response.\n\n\`\`\`\n${data.slice(0, 500)}\n\`\`\``
       );
     }
   });
@@ -143,7 +141,7 @@ const req = https.request(options, (res) => {
 req.on("error", (err) => {
   console.error("HTTPS request failed:", err.message);
   fs.writeFileSync("/tmp/ai_comment.txt",
-    `## AI Build Analysis\n\nNetwork error contacting Gemini: ${err.message}`
+    `## AI Build Analysis\n\nNetwork error: ${err.message}`
   );
 });
 

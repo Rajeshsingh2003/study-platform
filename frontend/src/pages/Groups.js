@@ -28,9 +28,12 @@ export default function Groups() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    fetchGroups();
-    if (userRole === "teacher") fetchPendingRequests();
-  }, []);
+  fetchGroups();
+
+  if (userRole === "teacher") {
+    fetchPendingRequests();
+  }
+}, [userRole, fetchGroups, fetchPendingRequests]);
 
   const fetchGroups = async () => {
     setLoading(true);

@@ -68,10 +68,10 @@ if (token) {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!token) navigate("/login");
-  }, [token]);
+  if (!token) navigate("/login");
+}, [navigate, token]);
 
-  useEffect(() => { fetchNotes(); }, [view]);
+  useEffect(() => { fetchNotes(); }, [fetchNotes]);
   useEffect(() => {
   fetchLeaderboard(); // first load
 

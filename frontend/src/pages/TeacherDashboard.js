@@ -173,7 +173,7 @@ export default function TeacherDashboard() {
                     </div>
                     <a
                       className="download-btn"
-                      href={`/uploads/${note.file}`}
+                      href={`http://localhost:5000/uploads/${note.file}`}
                       target="_blank" rel="noreferrer"
                       style={{ flexShrink: 0 }}
                     >

@@ -9,7 +9,13 @@ import { useCounter } from "../hooks/useCounter";
 import AcademicCalendar from "../components/AcademicCalendar";
 
 const SUBJECTS = ["All", "OS", "DBMS", "CN", "Math", "Other"];
-
+const rankColors = [
+  "#FFD700",
+  "#C0C0C0",
+  "#CD7F32",
+  "#8B5CF6",
+  "#3B82F6"
+];
 function getSubjectClass(subject) {
   if (!subject) return "subj-Other";
   const map = { OS: "subj-OS", DBMS: "subj-DBMS", CN: "subj-CN", Math: "subj-Math" };
@@ -143,18 +149,32 @@ export default function Home() {
     }
   };
 
-  const filteredNotes = notes.filter(note => {
-    const matchSearch = note.title?.toLowerCase().includes(search.toLowerCase());
-    const matchSubject = subjectFilter === "All" || note.subject === subjectFilter;
-    return matchSearch && matchSubject;
-  });
+  const filteredNotes = (Array.isArray(notes) ? notes : []).filter(note => {
+  const matchSearch = note.title
+    ?.toLowerCase()
+    .includes(search.toLowerCase());
+
+  const matchSubject =
+    subjectFilter === "All" ||
+    note.subject === subjectFilter;
+
+  return matchSearch && matchSubject;
+});
 
   // Animated counters
-  const notesCount = useCounter(notes.length);
-  const likesCount = useCounter(notes.reduce((a, n) => a + (n.likes?.length || 0), 0));
-  const uploadsCount = useCounter(notes.filter(n => n.user?._id === currentUserId).length);
-
-  const rankColors = ["gold", "silver", "bronze"];
+  const notesCount = useCounter(Array.isArray(notes) ? notes.length : 0);
+  const likesCount = useCounter(
+  (Array.isArray(notes) ? notes : []).reduce(
+    (a, n) => a + (n.likes?.length || 0),
+    0
+  )
+);
+  const uploadsCount = useCounter(
+  (Array.isArray(notes) ? notes : []).filter(
+    n => n.user?._id === currentUserId
+  ).length
+);
+  
 
   return (
     <div className="page-wrapper">
@@ -358,7 +378,7 @@ export default function Home() {
                       </button>
                       <a
                         className="download-btn"
-                        href={`/uploads/${note.file}`}
+                        href={`http://localhost:5000/uploads/${note.file}`}
                         target="_blank"
                         rel="noreferrer"
                       >

@@ -305,7 +305,7 @@ useEffect(() => {
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <a
                       className="read-btn"
-                      href={`/uploads/${book.file}`}
+                      href={`http://localhost:5000/uploads/${book.file}`}
                       target="_blank"
                       rel="noreferrer"
                     >

@@ -121,7 +121,7 @@ export default function StudentDashboard() {
                 <div className="note-actions">
                   <a
                     className="download-btn"
-                    href={`/uploads/${note.file}`}
+                    href={`http://localhost:5000/uploads/${note.file}`}
                     target="_blank" rel="noreferrer"
                   >
                     ↓ Download

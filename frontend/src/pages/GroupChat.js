@@ -141,7 +141,7 @@ export default function GroupChat() {
       const first = groups.find(g => membershipMap[g._id] === "approved") || groups[0];
       if (first) setSelectedGroup(first);
     }
-  }, [groups, membershipMap]);
+  }, [groups, membershipMap,selectedGroup]);
 
   // ── Join room & fetch messages when group/channel changes ────────────────
   

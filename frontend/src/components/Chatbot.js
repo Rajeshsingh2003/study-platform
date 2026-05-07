@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: "Hi! 👋 I'm your AI study assistant powered by Claude. Ask me anything — about your subjects, how to use this platform, or general study tips!", sender: "bot" }
+    { text: "Hi! 👋 I'm your AI study assistant powered by study-vault. Ask me anything — about your subjects, how to use this platform, or general study tips!", sender: "bot" }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

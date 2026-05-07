@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback  } from "react";
-import axios from "axios";
+import api from "../api";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
@@ -47,7 +47,7 @@ export default function Books() {
 
   const fetchBooks = useCallback(async () => {
   try {
-    const res = await axios.get("/api/books", {
+    const res = await api.get("/api/books", {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -78,7 +78,7 @@ useEffect(() => {
       const formData = new FormData();
       formData.append("file", file);
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
-      await axios.post("/api/books/upload", formData, {
+      await api.post("/api/books/upload", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToastMsg("📚 Book uploaded successfully! +15 points");
@@ -94,7 +94,7 @@ useEffect(() => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this book?")) return;
     try {
-      await axios.delete(`/api/books/${id}`, {
+      await api.delete(`/api/books/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToastMsg("Book deleted");
@@ -104,7 +104,7 @@ useEffect(() => {
 
   const handleRate = async (bookId, rating) => {
     try {
-      const res = await axios.post(`/api/books/${bookId}/rate`, { rating }, {
+      const res = await api.post(`/api/books/${bookId}/rate`, { rating }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUserRatings(prev => ({ ...prev, [bookId]: rating }));

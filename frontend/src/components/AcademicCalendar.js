@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import api from "../api";
 import { jwtDecode } from "jwt-decode";
 
 
@@ -31,7 +31,7 @@ export default function AcademicCalendar() {
 
   const fetchEvents = useCallback(async () => {
   try {
-    const res = await axios.get("/api/calendar", {
+    const res = await api.get("/api/calendar", {
       headers: { Authorization: `Bearer ${token}` }
     });
     setEvents(res.data || []);
@@ -56,7 +56,7 @@ useEffect(() => {
     if (!form.title || !form.date) return;
     setAdding(true);
     try {
-      await axios.post("/api/calendar", form, {
+      await api.post("/api/calendar", form, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setForm({ title: "", date: "", type: "exam", description: "" });
@@ -70,7 +70,7 @@ useEffect(() => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/calendar/${id}`, {
+      await api.delete(`/api/calendar/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchEvents();

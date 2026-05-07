@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback  } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import { jwtDecode } from "jwt-decode";
 import "../styles.css";
 import Chatbot from "../components/Chatbot";
@@ -26,7 +26,7 @@ export default function StudentDashboard() {
 
   const fetchMyNotes = useCallback(async () => {
     try {
-      const res = await axios.get("/api/my-notes", {
+      const res = await api.get("/api/my-notes", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotes(res.data.data || res.data);
@@ -40,7 +40,7 @@ export default function StudentDashboard() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note?")) return;
     try {
-      await axios.delete(`/api/notes/${id}`, {
+      await api.delete(`/api/notes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToast("Note deleted");

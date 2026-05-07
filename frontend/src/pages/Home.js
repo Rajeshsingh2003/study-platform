@@ -1,6 +1,6 @@
 import "../styles.css";
 import { useEffect, useState, useRef, useCallback  } from "react";
-import axios from "axios";
+import api from "../api";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import Chatbot from "../components/Chatbot";
@@ -73,7 +73,7 @@ export default function Home() {
       const url = view === "my"
         ? "/api/my-notes"
         : "/api/notes";
-      const res = await axios.get(url, {
+      const res = await api.get(url, {
         headers: view === "my" ? { Authorization: `Bearer ${token}` } : {}
       });
       setNotes(res.data.data || res.data);
@@ -83,7 +83,7 @@ export default function Home() {
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const res = await axios.get("/api/leaderboard");
+      const res = await api.get("/api/leaderboard");
       setLeaderboard(res.data || []);
     } catch {}
   }, []);
@@ -106,7 +106,7 @@ export default function Home() {
       formData.append("file", file);
       formData.append("title", title);
       formData.append("subject", subject);
-      await axios.post("/api/upload", formData, {
+      await api.post("/api/upload", formData, {
         
         headers: { Authorization: `Bearer ${token}` },
         onUploadProgress: (e) => {
@@ -128,7 +128,7 @@ export default function Home() {
   const handleLike = async (id) => {
     if (!token) { showToast("Login to like notes", "error"); return; }
     try {
-      await axios.post(`/api/notes/${id}/like`, {}, {
+      await api.post(`/api/notes/${id}/like`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotes();
@@ -139,7 +139,7 @@ export default function Home() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note?")) return;
     try {
-      await axios.delete(`/api/notes/${id}`, {
+      await api.delete(`/api/notes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToast("Note deleted");
@@ -399,7 +399,7 @@ export default function Home() {
               )}
             </div>
           </div>
-          +9
+          
 
           {/* SIDEBAR */}
           <div>
@@ -408,7 +408,7 @@ export default function Home() {
               {leaderboard.length === 0 ? (
                 <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No contributors yet. Upload to rank up!</p>
               ) : (
-                leaderboard.slice(0, 8).map((user, i) => (
+                (Array.isArray(leaderboard) ? leaderboard : []).slice(0, 8).map((user, i) => (
                   <div key={user._id} className="leaderboard-row">
                     <div className={`leaderboard-rank ${rankColors[i] || ""}`}>
                       {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i+1}`}

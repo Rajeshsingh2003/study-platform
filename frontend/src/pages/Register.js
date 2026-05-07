@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 import "../styles.css";
 const API_URL = process.env.REACT_APP_API_URL;
@@ -13,7 +13,7 @@ export default function Register() {
   const checkDomain = async (email) => {
     if (!email.includes("@")) return;
     try {
-      const res = await axios.post(`${API_URL}/api/auth/check-domain`, { email });
+      const res = await api.post(`${API_URL}/api/auth/check-domain`, { email });
       if (!res.data.allowed) {
         setDomainWarning(`Only these domains are allowed: ${res.data.domains.join(", ")}`);
       } else {
@@ -30,8 +30,8 @@ export default function Register() {
 
     setLoading(true); setError("");
     try {
-      await axios.post("/api/auth/signup", form);
-      await axios.post("/api/auth/login", { email: form.email, password: form.password });
+      api.post("/api/auth/signup", form)
+      await api.post("api/auth/login", { email: form.email, password: form.password });
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.msg || "Signup failed");

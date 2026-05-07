@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback  } from "react";
-import axios from "axios";
+import api from "../api";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -8,7 +8,7 @@ export default function AdminUsers() {
   // ✅ fetch users
   const fetchUsers = useCallback(async () => {
   try {
-    const res = await axios.get("/api/admin/users", {
+    const res = await api.get("/api/admin/users", {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -23,7 +23,7 @@ export default function AdminUsers() {
     if (!window.confirm("Delete this user?")) return;
 
     try {
-      await axios.delete(
+      await api.delete(
         `/api/admin/users/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` }

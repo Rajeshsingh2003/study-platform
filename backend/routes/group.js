@@ -115,7 +115,11 @@ router.post("/:groupId/approve/:userId", auth, async (req, res) => {
 
     const group = await Group.findById(req.params.groupId);
     if (!group) return res.status(404).json({ msg: "Group not found" });
-
+    if (group.createdBy.toString() !== req.user.id) {
+  return res.status(403).json({
+    msg: "Only group creator can approve requests"
+  });
+}
     const targetUserId = req.params.userId;
 
     // Remove from pending
@@ -145,7 +149,11 @@ router.post("/:groupId/reject/:userId", auth, async (req, res) => {
 
     const group = await Group.findById(req.params.groupId);
     if (!group) return res.status(404).json({ msg: "Group not found" });
-
+    if (group.createdBy.toString() !== req.user.id) {
+  return res.status(403).json({
+    msg: "Only group creator can reject requests"
+  });
+}
     const targetUserId = req.params.userId;
 
     group.pendingRequests = (group.pendingRequests || []).filter(
@@ -172,7 +180,10 @@ router.get("/pending-requests", auth, async (req, res) => {
       return res.status(403).json({ msg: "Teachers only" });
     }
 
-    const groups = await Group.find({ pendingRequests: { $exists: true, $not: { $size: 0 } } })
+    const groups = await Group.find({
+  createdBy: req.user.id,
+  pendingRequests: { $exists: true, $not: { $size: 0 } }
+})
       .populate("pendingRequests", "name email semester role")
       .lean();
 
@@ -200,9 +211,12 @@ router.get("/:groupId/messages", auth, async (req, res) => {
 
     const userId = req.user.id;
     const isMember = group.members.map(m => m.toString()).includes(userId);
-    const isTeacher = req.user.role === "teacher";
+    
 
-    if (!isMember && !isTeacher) {
+    const isCreator =
+  group.createdBy.toString() === userId;
+
+if (!isMember && !isCreator) {
       return res.status(403).json({ msg: "Not a member" });
     }
 
@@ -223,18 +237,33 @@ router.get("/:groupId/messages", auth, async (req, res) => {
 router.post("/:groupId/messages", auth, async (req, res) => {
   try {
     const group = await Group.findById(req.params.groupId);
-    if (!group) return res.status(404).json({ msg: "Group not found" });
+
+    if (!group) {
+      return res.status(404).json({ msg: "Group not found" });
+    }
 
     const userId = req.user.id;
-    const isMember = group.members.map(m => m.toString()).includes(userId);
-    const isTeacher = req.user.role === "teacher";
 
-    if (!isMember && !isTeacher) {
-      return res.status(403).json({ msg: "Not a member" });
+    const isMember = group.members
+      .map(m => m.toString())
+      .includes(userId);
+
+    const isCreator =
+      group.createdBy.toString() === userId;
+
+    if (!isMember && !isCreator) {
+      return res.status(403).json({
+        msg: "Not a member"
+      });
     }
 
     const { channelId, text } = req.body;
-    if (!text?.trim()) return res.status(400).json({ msg: "Message cannot be empty" });
+
+    if (!text?.trim()) {
+      return res.status(400).json({
+        msg: "Message cannot be empty"
+      });
+    }
 
     const msg = new Message({
       group: req.params.groupId,
@@ -245,7 +274,9 @@ router.post("/:groupId/messages", auth, async (req, res) => {
     });
 
     await msg.save();
+
     res.json(msg);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Server error" });
@@ -260,9 +291,11 @@ router.get("/:groupId/members", auth, async (req, res) => {
 
     const userId = req.user.id;
     const isMember = group.members.map(m => m._id.toString()).includes(userId);
-    const isTeacher = req.user.role === "teacher";
 
-    if (!isMember && !isTeacher) return res.status(403).json({ msg: "Not a member" });
+    const isCreator =
+  group.createdBy.toString() === userId;
+
+if (!isMember && !isCreator) return res.status(403).json({ msg: "Not a member" });
 
     res.json(group.members);
   } catch (err) {
@@ -274,7 +307,17 @@ router.get("/:groupId/members", auth, async (req, res) => {
 router.delete("/:groupId", auth, async (req, res) => {
   try {
     if (req.user.role !== "teacher") return res.status(403).json({ msg: "Teachers only" });
+    const group = await Group.findById(req.params.groupId);
 
+if (!group) {
+  return res.status(404).json({ msg: "Group not found" });
+}
+
+if (group.createdBy.toString() !== req.user.id) {
+  return res.status(403).json({
+    msg: "Only creator can delete this group"
+  });
+}
     await Group.findByIdAndDelete(req.params.groupId);
     await Message.deleteMany({ group: req.params.groupId });
     res.json({ msg: "Group deleted" });

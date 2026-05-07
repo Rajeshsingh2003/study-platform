@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 import "../styles.css";
 
@@ -13,7 +13,7 @@ export default function Login() {
     if (!form.email || !form.password) { setError("Please fill in all fields"); return; }
     setLoading(true); setError("");
     try {
-      const res = await axios.post("/api/auth/login", form);
+      const res = await api.post("/api/auth/login", form)
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (err) {

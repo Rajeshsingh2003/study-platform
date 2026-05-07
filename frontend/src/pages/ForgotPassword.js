@@ -1,6 +1,6 @@
 // ForgotPassword.js
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export function ForgotPassword() {
@@ -14,7 +14,7 @@ export function ForgotPassword() {
     if (!email) { setError("Enter your email"); return; }
     setLoading(true); setError("");
     try {
-      await axios.post("/api/auth/forgot-password", { email });
+      await api.post("/api/auth/forgot-password", { email });
       setSent(true);
     } catch (err) {
       setError(err.response?.data?.msg || "Failed to send email");
@@ -85,7 +85,7 @@ export function ResetPassword() {
     if (password !== confirm) { setError("Passwords do not match"); return; }
     setLoading(true); setError("");
     try {
-      await axios.post("/api/auth/reset-password", { token, password });
+      await api.post("/api/auth/reset-password", { token, password });
       setDone(true);
     } catch (err) {
       setError(err.response?.data?.msg || "Reset failed");

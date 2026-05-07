@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 // Single persistent socket — created ONCE, never inside component body
-const socket = io("", { autoConnect: true });
+const socket = io("http://localhost:5000", {
+  transports: ["websocket"],
+  autoConnect: true
+});
 
 const CHANNELS = [
   { id: "general", icon: "💬", label: "general" },
@@ -149,7 +152,7 @@ export default function GroupChat() {
   const fetchMessages = useCallback(async () => {
     if (!selectedGroup) return;
     try {
-      const res = await axios.get(
+      const res = await api.get(
         `/api/groups/${selectedGroup._id}/messages?channel=${selectedChannel}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -160,7 +163,7 @@ export default function GroupChat() {
   const fetchMembers = useCallback(async () => {
     if (!selectedGroup) return;
     try {
-      const res = await axios.get(
+      const res = await api.get(
         `/api/groups/${selectedGroup._id}/members`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -186,7 +189,7 @@ export default function GroupChat() {
   const fetchGroups = useCallback(async () => {
 
     try {
-      const res = await axios.get("/api/groups/all", {
+      const res = await api.get("/api/groups/all", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGroups(res.data.groups || []);
@@ -200,7 +203,7 @@ export default function GroupChat() {
 
   const handleJoinRequest = async (gId) => {
     try {
-      await axios.post(`/api/groups/${gId}/join`, {}, {
+      await api.post(`/api/groups/${gId}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMembershipMap(prev => ({ ...prev, [gId]: "pending" }));
@@ -228,7 +231,7 @@ export default function GroupChat() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post("/api/upload-chat-file", formData, {
+      const res = await api.post("/api/upload-chat-file", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       socket.emit("sendMessage", {

@@ -144,6 +144,30 @@ export default function GroupChat() {
   }, [groups, membershipMap]);
 
   // ── Join room & fetch messages when group/channel changes ────────────────
+  
+
+  const fetchMessages = useCallback(async () => {
+    if (!selectedGroup) return;
+    try {
+      const res = await axios.get(
+        `/api/groups/${selectedGroup._id}/messages?channel=${selectedChannel}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessages(res.data || []);
+    } catch {}
+  }, [selectedGroup, selectedChannel, token]);
+
+  const fetchMembers = useCallback(async () => {
+    if (!selectedGroup) return;
+    try {
+      const res = await axios.get(
+        `/api/groups/${selectedGroup._id}/members`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMembers(res.data || []);
+    } catch {}
+  }, [selectedGroup, token]);
+
   useEffect(() => {
     if (!selectedGroup) return;
     const status = membershipMap[selectedGroup._id] || null;
@@ -173,28 +197,6 @@ export default function GroupChat() {
   useEffect(() => {
   fetchGroups();
 }, [fetchGroups]);
-
-  const fetchMessages = useCallback(async () => {
-    if (!selectedGroup) return;
-    try {
-      const res = await axios.get(
-        `/api/groups/${selectedGroup._id}/messages?channel=${selectedChannel}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMessages(res.data || []);
-    } catch {}
-  }, [selectedGroup, selectedChannel, token]);
-
-  const fetchMembers = useCallback(async () => {
-    if (!selectedGroup) return;
-    try {
-      const res = await axios.get(
-        `/api/groups/${selectedGroup._id}/members`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMembers(res.data || []);
-    } catch {}
-  }, [selectedGroup, token]);
 
   const handleJoinRequest = async (gId) => {
     try {

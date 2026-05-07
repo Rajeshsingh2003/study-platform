@@ -17,9 +17,9 @@ export default function StudentDashboard() {
   const [search, setSearch] = useState("");
 
   const token = localStorage.getItem("token");
-  let currentUserId = null, userName = "Student";
+  let userName = "Student";
   if (token) {
-    try { const d = jwtDecode(token); currentUserId = d.id; userName = d.name; } catch {}
+    try { const d = jwtDecode(token); userName = d.name; } catch {}
   }
 
   

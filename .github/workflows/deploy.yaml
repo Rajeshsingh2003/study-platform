@@ -58,7 +58,7 @@ jobs:
           push: true
           tags: |
             rajeshgill634/studyvault-backend:latest
-            rajeshgill634/studyvault-backend:${{ github.sha }}
+            
 
       # Build and Push Frontend Image
       - name: Build and Push Frontend Docker Image
@@ -69,7 +69,7 @@ jobs:
           push: true
           tags: |
             rajeshgill634/studyvault-frontend:latest
-            rajeshgill634/studyvault-frontend:${{ github.sha }}
+
 
       # Optional: Build Docker Compose
       - name: Docker Compose Build

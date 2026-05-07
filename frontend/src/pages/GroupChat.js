@@ -5,7 +5,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
 // Single persistent socket — created ONCE, never inside component body
-const socket = io("http://localhost:5000", { autoConnect: true });
+const socket = io("", { autoConnect: true });
 
 const CHANNELS = [
   { id: "general", icon: "💬", label: "general" },
@@ -163,7 +163,7 @@ export default function GroupChat() {
   const fetchGroups = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/groups/all", {
+      const res = await axios.get("/api/groups/all", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGroups(res.data.groups || []);
@@ -176,7 +176,7 @@ export default function GroupChat() {
     if (!selectedGroup) return;
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/groups/${selectedGroup._id}/messages?channel=${selectedChannel}`,
+        `/api/groups/${selectedGroup._id}/messages?channel=${selectedChannel}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessages(res.data || []);
@@ -187,7 +187,7 @@ export default function GroupChat() {
     if (!selectedGroup) return;
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/groups/${selectedGroup._id}/members`,
+        `/api/groups/${selectedGroup._id}/members`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMembers(res.data || []);
@@ -196,7 +196,7 @@ export default function GroupChat() {
 
   const handleJoinRequest = async (gId) => {
     try {
-      await axios.post(`http://localhost:5000/api/groups/${gId}/join`, {}, {
+      await axios.post(`/api/groups/${gId}/join`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMembershipMap(prev => ({ ...prev, [gId]: "pending" }));
@@ -224,7 +224,7 @@ export default function GroupChat() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post("http://localhost:5000/api/upload-chat-file", formData, {
+      const res = await axios.post("/api/upload-chat-file", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       socket.emit("sendMessage", {

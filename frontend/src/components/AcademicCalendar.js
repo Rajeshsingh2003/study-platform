@@ -41,7 +41,7 @@ export default function AcademicCalendar() {
 
   const fetchEvents = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/calendar", {
+      const res = await axios.get("/api/calendar", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEvents(res.data || []);
@@ -52,7 +52,7 @@ export default function AcademicCalendar() {
     if (!form.title || !form.date) return;
     setAdding(true);
     try {
-      await axios.post("http://localhost:5000/api/calendar", form, {
+      await axios.post("/api/calendar", form, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setForm({ title: "", date: "", type: "exam", description: "" });
@@ -66,7 +66,7 @@ export default function AcademicCalendar() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/calendar/${id}`, {
+      await axios.delete(`/api/calendar/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchEvents();

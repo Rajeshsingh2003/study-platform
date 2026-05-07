@@ -1,0 +1,13 @@
+# ── k8s/pvc.yml ─────────────────────────────────────────────────
+# Persistent storage for user-uploaded files (notes/PDFs)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: studyvault
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

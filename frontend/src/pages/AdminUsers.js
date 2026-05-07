@@ -8,7 +8,7 @@ export default function AdminUsers() {
   // ✅ fetch users
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/users", {
+      const res = await axios.get("/api/admin/users", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(res.data);
@@ -23,7 +23,7 @@ export default function AdminUsers() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/admin/users/${id}`,
+        `/api/admin/users/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

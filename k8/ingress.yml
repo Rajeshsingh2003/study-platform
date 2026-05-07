@@ -1,0 +1,44 @@
+# ── k8s/ingress.yml ─────────────────────────────────────────────
+# Ingress routes external traffic to frontend and backend
+# Requires nginx ingress controller installed in your cluster
+# Install with: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/cloud/deploy.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: studyvault-ingress
+  namespace: studyvault
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"   # allow large file uploads
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: studyvault.local        # change to your real domain in production
+      http:
+        paths:
+          # All /api/* requests → backend
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 5000
+
+          # All /uploads/* → backend (file downloads)
+          - path: /uploads
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 5000
+
+          # Everything else → frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

@@ -52,7 +52,7 @@ export default function Books() {
 
   const fetchBooks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/books", {
+      const res = await axios.get("/api/books", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBooks(res.data || []);
@@ -71,7 +71,7 @@ export default function Books() {
       const formData = new FormData();
       formData.append("file", file);
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
-      await axios.post("http://localhost:5000/api/books/upload", formData, {
+      await axios.post("/api/books/upload", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToastMsg("📚 Book uploaded successfully! +15 points");
@@ -87,7 +87,7 @@ export default function Books() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this book?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/books/${id}`, {
+      await axios.delete(`/api/books/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToastMsg("Book deleted");
@@ -97,7 +97,7 @@ export default function Books() {
 
   const handleRate = async (bookId, rating) => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/books/${bookId}/rate`, { rating }, {
+      const res = await axios.post(`/api/books/${bookId}/rate`, { rating }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUserRatings(prev => ({ ...prev, [bookId]: rating }));
@@ -298,7 +298,7 @@ export default function Books() {
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <a
                       className="read-btn"
-                      href={`http://localhost:5000/uploads/${book.file}`}
+                      href={`/uploads/${book.file}`}
                       target="_blank"
                       rel="noreferrer"
                     >

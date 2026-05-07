@@ -85,8 +85,8 @@ if (token) {
   const fetchNotes = async () => {
     try {
       const url = view === "my"
-        ? "http://localhost:5000/api/my-notes"
-        : "http://localhost:5000/api/notes";
+        ? "/api/my-notes"
+        : "/api/notes";
       const res = await axios.get(url, {
         headers: view === "my" ? { Authorization: `Bearer ${token}` } : {}
       });
@@ -96,7 +96,7 @@ if (token) {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/leaderboard");
+      const res = await axios.get("/api/leaderboard");
       setLeaderboard(res.data || []);
     } catch {}
   };
@@ -111,7 +111,7 @@ if (token) {
       formData.append("file", file);
       formData.append("title", title);
       formData.append("subject", subject);
-      await axios.post("http://localhost:5000/api/upload", formData, {
+      await axios.post("/api/upload", formData, {
         
         headers: { Authorization: `Bearer ${token}` },
         onUploadProgress: (e) => {
@@ -133,7 +133,7 @@ if (token) {
   const handleLike = async (id) => {
     if (!token) { showToast("Login to like notes", "error"); return; }
     try {
-      await axios.post(`http://localhost:5000/api/notes/${id}/like`, {}, {
+      await axios.post(`/api/notes/${id}/like`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotes();
@@ -144,7 +144,7 @@ if (token) {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/notes/${id}`, {
+      await axios.delete(`/api/notes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToast("Note deleted");
@@ -369,7 +369,7 @@ if (token) {
                       </button>
                       <a
                         className="download-btn"
-                        href={`http://localhost:5000/uploads/${note.file}`}
+                        href={`/uploads/${note.file}`}
                         target="_blank"
                         rel="noreferrer"
                       >

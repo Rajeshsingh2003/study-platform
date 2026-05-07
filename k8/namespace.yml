@@ -1,0 +1,6 @@
+# ── k8s/namespace.yml ───────────────────────────────────────────
+# All StudyVault resources live inside this namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: studyvault

@@ -35,7 +35,7 @@ export default function Groups() {
   const fetchGroups = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/groups/all", {
+      const res = await axios.get("/api/groups/all", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGroups(res.data.groups || []);
@@ -45,7 +45,7 @@ export default function Groups() {
 
   const fetchPendingRequests = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/groups/pending-requests", {
+      const res = await axios.get("/api/groups/pending-requests", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendingRequests(res.data || []);
@@ -60,7 +60,7 @@ export default function Groups() {
     setCreating(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/groups",
+        "/api/groups",
         { name: newGroupName, semester: newGroupSem },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -75,7 +75,7 @@ export default function Groups() {
   const handleApprove = async (groupId, requestUserId) => {
     try {
       await axios.post(
-        `http://localhost:5000/api/groups/${groupId}/approve/${requestUserId}`,
+        `/api/groups/${groupId}/approve/${requestUserId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -87,7 +87,7 @@ export default function Groups() {
   const handleReject = async (groupId, requestUserId) => {
     try {
       await axios.post(
-        `http://localhost:5000/api/groups/${groupId}/reject/${requestUserId}`,
+        `/api/groups/${groupId}/reject/${requestUserId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -98,7 +98,7 @@ export default function Groups() {
   const handleDeleteGroup = async (groupId) => {
     if (!window.confirm("Delete this group and all its messages?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/groups/${groupId}`, {
+      await axios.delete(`/api/groups/${groupId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchGroups();
@@ -323,7 +323,7 @@ export default function Groups() {
                           style={{ padding: "8px 18px", fontSize: 13 }}
                           onClick={async () => {
                             try {
-                              await axios.post(`http://localhost:5000/api/groups/${g._id}/join`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                              await axios.post(`/api/groups/${g._id}/join`, {}, { headers: { Authorization: `Bearer ${token}` } });
                               fetchGroups();
                             } catch (err) { alert(err.response?.data?.msg || "Failed"); }
                           }}

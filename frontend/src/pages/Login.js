@@ -13,7 +13,7 @@ export default function Login() {
     if (!form.email || !form.password) { setError("Please fill in all fields"); return; }
     setLoading(true); setError("");
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
+      const res = await axios.post("/api/auth/login", form);
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (err) {

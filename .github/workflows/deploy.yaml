@@ -1,134 +1,95 @@
-name: StudyVault CI/CD
+# Updated GitHub Actions Workflow with Docker Hub Push
+name: StudyVault CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
+    branches:
+      - main
+      - master
 
 jobs:
-  build-and-analyze:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      # Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # -------------------------------
-      # INSTALL DEPENDENCIES
-      # -------------------------------
+      # Install Backend Dependencies
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm install
 
-      - name: Install backend deps
-        id: backend-install
-        run: |
-          cd backend
-          npm install
+      # Install Frontend Dependencies
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm install
 
-      - name: Install frontend deps
-        id: frontend-install
-        run: |
-          cd frontend
-          npm install
+      # Build Frontend
+      - name: Build React Frontend
+        working-directory: ./frontend
+        run: npm run build
 
-      # -------------------------------
-      # BUILD FRONTEND (capture logs)
-      # -------------------------------
-
-      - name: Build frontend
-        id: frontend-build
-        run: |
-          cd frontend
-          npm run build 2>&1 | tee /tmp/frontend_build_logs.txt
-
-      # -------------------------------
-      # DOCKER BUILD (capture logs)
-      # -------------------------------
-
-      - name: Build Docker images
-        id: docker-build
-        run: |
-          docker compose build 2>&1 | tee /tmp/build_logs.txt
-
-      # -------------------------------
-      # COLLECT JOB RESULTS (REAL STATUS)
-      # -------------------------------
-
-      - name: Collect job results
-        if: always()
-        run: |
-          echo "BACKEND_INSTALL=${{ steps.backend-install.outcome }}" > /tmp/job_summary.txt
-          echo "FRONTEND_INSTALL=${{ steps.frontend-install.outcome }}" >> /tmp/job_summary.txt
-          echo "FRONTEND_BUILD=${{ steps.frontend-build.outcome }}" >> /tmp/job_summary.txt
-          echo "DOCKER_BUILD=${{ steps.docker-build.outcome }}" >> /tmp/job_summary.txt
-
-          echo "" >> /tmp/job_summary.txt
-          echo "==== FRONTEND BUILD LOGS ====" >> /tmp/job_summary.txt
-          tail -n 100 /tmp/frontend_build_logs.txt >> /tmp/job_summary.txt
-
-          echo "" >> /tmp/job_summary.txt
-          echo "==== DOCKER BUILD LOGS ====" >> /tmp/job_summary.txt
-          tail -n 100 /tmp/build_logs.txt >> /tmp/job_summary.txt
-
-          cat /tmp/job_summary.txt
-
-      # -------------------------------
-      # AI LOG ANALYSIS (SAFE)
-      # -------------------------------
-
-      - name: AI log analysis
-        if: always()
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          node .github/scripts/analyze-logs.js || echo "AI analysis failed, continuing..."
-
-      # -------------------------------
-      # COMMENT ON PR
-      # -------------------------------
-
-      - name: Post AI comment on PR
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+      # Login to Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          script: |
-            const fs = require('fs');
-            if (fs.existsSync('/tmp/ai_comment.txt')) {
-              const body = fs.readFileSync('/tmp/ai_comment.txt', 'utf8');
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body
-              });
-              console.log('Comment posted on PR successfully!');
-            }
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # -------------------------------
-      # COMMENT ON PUSH
-      # -------------------------------
-
-      - name: Post AI comment on Push
-        if: always() && github.event_name == 'push'
-        uses: actions/github-script@v7
+      # Build and Push Backend Image
+      - name: Build and Push Backend Docker Image
+        uses: docker/build-push-action@v5
         with:
-          script: |
-            const fs = require('fs');
-            if (fs.existsSync('/tmp/ai_comment.txt')) {
-              const body = fs.readFileSync('/tmp/ai_comment.txt', 'utf8');
-              await github.rest.repos.createCommitComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: context.sha,
-                body
-              });
-              console.log('Comment posted on commit successfully!');
-            }
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            rajeshgill634/studyvault-backend:latest
+            rajeshgill634/studyvault-backend:${{ github.sha }}
+
+      # Build and Push Frontend Image
+      - name: Build and Push Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            rajeshgill634/studyvault-frontend:latest
+            rajeshgill634/studyvault-frontend:${{ github.sha }}
+
+      # Optional: Build Docker Compose
+      - name: Docker Compose Build
+        run: docker compose build
+
+      # Save Build Logs
+      - name: Collect Build Logs
+        run: |
+          echo "Workflow completed successfully" > /tmp/build_logs.txt
+          echo "Docker images pushed to Docker Hub" >> /tmp/build_logs.txt
+          echo "Commit SHA: ${{ github.sha }}" >> /tmp/build_logs.txt
+
+      # AI Log Analysis
+      - name: Run AI Log Analysis
+        run: node scripts/analyze-logs.js
+
+      # Upload Logs as Artifact
+      - name: Upload Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: /tmp/build_logs.txt
+
+

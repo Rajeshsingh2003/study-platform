@@ -29,7 +29,7 @@ export default function StudentDashboard() {
 
   const fetchMyNotes = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/my-notes", {
+      const res = await axios.get("/api/my-notes", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotes(res.data.data || res.data);
@@ -39,7 +39,7 @@ export default function StudentDashboard() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/notes/${id}`, {
+      await axios.delete(`/api/notes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       showToast("Note deleted");
@@ -120,7 +120,7 @@ export default function StudentDashboard() {
                 <div className="note-actions">
                   <a
                     className="download-btn"
-                    href={`http://localhost:5000/uploads/${note.file}`}
+                    href={`/uploads/${note.file}`}
                     target="_blank" rel="noreferrer"
                   >
                     ↓ Download

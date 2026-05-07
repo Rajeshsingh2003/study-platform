@@ -11,7 +11,7 @@ RUN npm install
 COPY . .
 
 # Passed in from docker-compose at build time
-ARG REACT_APP_API_URL=""
+ARG REACT_APP_API_URL=http://studyvault.local
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 RUN npm run build

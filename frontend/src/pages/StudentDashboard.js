@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback  } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -22,19 +22,20 @@ export default function StudentDashboard() {
     try { const d = jwtDecode(token); currentUserId = d.id; userName = d.name; } catch {}
   }
 
-  useEffect(() => {
-    if (!token) { navigate("/login"); return; }
-    fetchMyNotes();
-  }, []);
+  
 
-  const fetchMyNotes = async () => {
+  const fetchMyNotes = useCallback(async () => {
     try {
       const res = await axios.get("/api/my-notes", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotes(res.data.data || res.data);
     } catch {}
-  };
+  }, [token]);
+  useEffect(() => {
+    if (!token) { navigate("/login"); return; }
+    fetchMyNotes();
+  }, [fetchMyNotes, navigate, token]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note?")) return;

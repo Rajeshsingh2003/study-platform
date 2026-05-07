@@ -1,5 +1,5 @@
 import "../styles.css";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback  } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -39,30 +39,18 @@ export default function Home() {
 
   const token = localStorage.getItem("token");
 
-
-let userSem = "";
-
-if (token) {
-  try {
-    const decoded = jwtDecode(token);
-
-    currentUserId = decoded.id;
-    userRole = decoded.role;
-    userName = decoded.name;
-    userSem = decoded.semester;   // ✅ IMPORTANT
-
-  } catch (err) {
-    console.log("Invalid token");
-  }
-}
   
-  let currentUserId = null, userRole = null, userName = "User";
+  let currentUserId = null,
+    userRole = null,
+    userName = "User",
+    userSem = "";
   if (token) {
     try {
       const d = jwtDecode(token);
       currentUserId = d.id;
       userRole = d.role;
       userName = d.name;
+      userSem = d.semester;
     } catch {}
   }
 
@@ -71,18 +59,10 @@ if (token) {
   if (!token) navigate("/login");
 }, [navigate, token]);
 
-  useEffect(() => { fetchNotes(); }, [fetchNotes]);
-  useEffect(() => {
-  fetchLeaderboard(); // first load
+  
+  
 
-  const interval = setInterval(() => {
-    fetchLeaderboard();   // refresh every 3 sec
-  }, 3000);
-
-  return () => clearInterval(interval);
-}, []);
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       const url = view === "my"
         ? "/api/my-notes"
@@ -92,15 +72,24 @@ if (token) {
       });
       setNotes(res.data.data || res.data);
     } catch {}
-  };
+  }, [view, token]);
+  useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       const res = await axios.get("/api/leaderboard");
       setLeaderboard(res.data || []);
     } catch {}
-  };
+  }, []);
+  useEffect(() => {
+  fetchLeaderboard(); // first load
 
+  const interval = setInterval(() => {
+    fetchLeaderboard();   // refresh every 3 sec
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [fetchLeaderboard]);
   const handleUpload = async () => {
     if (!file) { showToast("Please select a file first", "error"); return; }
     if (!title.trim()) { showToast("Please enter a title", "error"); return; }

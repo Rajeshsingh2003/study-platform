@@ -31,7 +31,7 @@ export default function Register() {
     setLoading(true); setError("");
     try {
       await axios.post("/api/auth/signup", form);
-      const loginRes = await axios.post("/api/auth/login", { email: form.email, password: form.password });
+      await axios.post("/api/auth/login", { email: form.email, password: form.password });
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.msg || "Signup failed");

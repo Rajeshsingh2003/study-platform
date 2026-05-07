@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+
+
 
 const EVENT_TYPES = {
   exam: { color: "#ef4444", icon: "📝", label: "Exam" },
@@ -27,9 +29,18 @@ export default function AcademicCalendar() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const dropRef = useRef(null);
 
-  useEffect(() => {
-    if (open) fetchEvents();
-  }, [open]);
+  const fetchEvents = useCallback(async () => {
+  try {
+    const res = await axios.get("/api/calendar", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setEvents(res.data || []);
+  } catch {}
+}, [token]);
+
+useEffect(() => {
+  if (open) fetchEvents();
+}, [open, fetchEvents]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -39,14 +50,7 @@ export default function AcademicCalendar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      const res = await axios.get("/api/calendar", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setEvents(res.data || []);
-    } catch {}
-  };
+  
 
   const handleAdd = async () => {
     if (!form.title || !form.date) return;

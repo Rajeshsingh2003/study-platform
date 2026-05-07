@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useCallback} from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -11,11 +11,13 @@ export default function Groups() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  let userName = "User", userRole = "student", userId = "", userSem = "";
+  let userName = "User", userRole = "student",  userSem = "";
   if (token) {
     try {
       const d = jwtDecode(token);
-      userName = d.name; userRole = d.role; userId = d.id; userSem = d.semester;
+      userName = d.name;
+      userRole = d.role;
+      userSem = d.semester;
     } catch {}
   }
 
@@ -27,15 +29,9 @@ export default function Groups() {
   const [activeTab, setActiveTab] = useState("groups"); // groups | requests
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-  fetchGroups();
+  
 
-  if (userRole === "teacher") {
-    fetchPendingRequests();
-  }
-}, [userRole, fetchGroups, fetchPendingRequests]);
-
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get("/api/groups/all", {
@@ -44,16 +40,24 @@ export default function Groups() {
       setGroups(res.data.groups || []);
     } catch {}
     setLoading(false);
-  };
+  }, [token]);
 
-  const fetchPendingRequests = async () => {
+  const fetchPendingRequests = useCallback(async () => {
     try {
       const res = await axios.get("/api/groups/pending-requests", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendingRequests(res.data || []);
     } catch {}
-  };
+  }, [token]);
+
+  useEffect(() => {
+  fetchGroups();
+
+  if (userRole === "teacher") {
+    fetchPendingRequests();
+  }
+}, [userRole, fetchGroups, fetchPendingRequests]);
 
   const createGroup = async () => {
     if (!newGroupName.trim() || !newGroupSem.trim()) {

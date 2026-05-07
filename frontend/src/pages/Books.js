@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback  } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -45,19 +45,26 @@ export default function Books() {
   const [toast, setToast] = useState("");
   const fileRef = useRef(null);
 
-  useEffect(() => {
-    if (!token) { navigate("/login"); return; }
-    fetchBooks();
-  }, []);
+  const fetchBooks = useCallback(async () => {
+  try {
+    const res = await axios.get("/api/books", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-  const fetchBooks = async () => {
-    try {
-      const res = await axios.get("/api/books", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBooks(res.data || []);
-    } catch {}
-  };
+    setBooks(res.data || []);
+  } catch {}
+}, [token]);
+
+useEffect(() => {
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  fetchBooks();
+}, [fetchBooks, navigate, token]);
+
+  
 
   const showToastMsg = (msg) => {
     setToast(msg);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback  } from "react";
 import axios from "axios";
 
 export default function AdminUsers() {
@@ -6,16 +6,17 @@ export default function AdminUsers() {
   const token = localStorage.getItem("token");
 
   // ✅ fetch users
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get("/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const fetchUsers = useCallback(async () => {
+  try {
+    const res = await axios.get("/api/admin/users", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    setUsers(res.data);
+  } catch (err) {
+    console.log(err);
+  }
+}, [token]);
 
   // ✅ delete user
   const deleteUser = async (id) => {
@@ -36,8 +37,8 @@ export default function AdminUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+  fetchUsers();
+}, [fetchUsers]);
 
   return (
     <div style={{ padding: 20 }}>

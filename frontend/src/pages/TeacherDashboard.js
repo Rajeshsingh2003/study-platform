@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback  } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -24,20 +24,21 @@ export default function TeacherDashboard() {
     try { const d = jwtDecode(token); userName = d.name; userRole = d.role; } catch {}
   }
 
-  useEffect(() => {
-    if (!token || userRole !== "teacher") { navigate("/"); return; }
-    fetchAllNotes();
-  }, []);
+  
 
-  const fetchAllNotes = async () => {
+  const fetchAllNotes = useCallback(async () => {
     try {
       const res = await axios.get("/api/notes", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotes(res.data.data || res.data);
     } catch {}
-  };
+  }, [token]);
 
+  useEffect(() => {
+    if (!token || userRole !== "teacher") { navigate("/"); return; }
+    fetchAllNotes();
+  }, [fetchAllNotes, navigate, token, userRole]);
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this student's note?")) return;
     try {

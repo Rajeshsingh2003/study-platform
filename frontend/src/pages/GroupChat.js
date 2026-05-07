@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // Single persistent socket — created ONCE, never inside component body
 const socket = io("", { autoConnect: true });
@@ -66,7 +66,7 @@ function FileMessage({ fileUrl, fileName, fileType }) {
 
 export default function GroupChat() {
   const navigate = useNavigate();
-  const { groupId } = useParams();
+
 
   const token = localStorage.getItem("token");
   let userName = "User", userRole = "student", userId = "", userSem = "";
@@ -85,7 +85,6 @@ export default function GroupChat() {
   const [onlineCount, setOnlineCount] = useState(1);
   const [joinStatus, setJoinStatus] = useState(null);
   const [membershipMap, setMembershipMap] = useState({});
-  const [loading, setLoading] = useState(true);
   const [showMembers, setShowMembers] = useState(false);
   const [members, setMembers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -135,7 +134,7 @@ export default function GroupChat() {
   }, [messages]);
 
   // ── Fetch groups on mount ────────────────────────────────────────────────
-  useEffect(() => { fetchGroups(); }, []);
+  
 
   useEffect(() => {
     if (groups.length && !selectedGroup) {
@@ -158,10 +157,10 @@ export default function GroupChat() {
       fetchMessages();
       fetchMembers();
     }
-  }, [selectedGroup, selectedChannel, membershipMap]);
+  }, [selectedGroup, selectedChannel, membershipMap, fetchMessages, fetchMembers]);
 
-  const fetchGroups = async () => {
-    setLoading(true);
+  const fetchGroups = useCallback(async () => {
+
     try {
       const res = await axios.get("/api/groups/all", {
         headers: { Authorization: `Bearer ${token}` }
@@ -169,10 +168,13 @@ export default function GroupChat() {
       setGroups(res.data.groups || []);
       setMembershipMap(res.data.membershipMap || {});
     } catch {}
-    setLoading(false);
-  };
+  }, [token]);
 
-  const fetchMessages = async () => {
+  useEffect(() => {
+  fetchGroups();
+}, [fetchGroups]);
+
+  const fetchMessages = useCallback(async () => {
     if (!selectedGroup) return;
     try {
       const res = await axios.get(
@@ -181,9 +183,9 @@ export default function GroupChat() {
       );
       setMessages(res.data || []);
     } catch {}
-  };
+  }, [selectedGroup, selectedChannel, token]);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     if (!selectedGroup) return;
     try {
       const res = await axios.get(
@@ -192,7 +194,7 @@ export default function GroupChat() {
       );
       setMembers(res.data || []);
     } catch {}
-  };
+  }, [selectedGroup, token]);
 
   const handleJoinRequest = async (gId) => {
     try {

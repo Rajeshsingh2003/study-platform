@@ -30,12 +30,17 @@ export default function Register() {
 
     setLoading(true); setError("");
     try {
-      api.post("/api/auth/signup", form)
-      await api.post("api/auth/login", { email: form.email, password: form.password });
-      navigate("/");
-    } catch (err) {
-      setError(err.response?.data?.msg || "Signup failed");
-    } finally {
+  await api.post("/api/auth/signup", form);
+
+  await api.post("/api/auth/login", {
+    email: form.email,
+    password: form.password,
+  });
+
+  navigate("/");
+} catch (err) {
+  setError(err.response?.data?.msg || "Signup failed");
+} finally {
       setLoading(false);
     }
   };
